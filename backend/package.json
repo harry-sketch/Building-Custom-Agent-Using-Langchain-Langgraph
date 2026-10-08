@@ -3,7 +3,8 @@
   "module": "main.js",
   "type": "module",
   "scripts": {
-    "dev": "bun run main.js"
+    "dev": "bun run main.js",
+    "graph": "bun run ./graphs/graph.js"
   },
   "devDependencies": {
     "@types/bun": "latest"

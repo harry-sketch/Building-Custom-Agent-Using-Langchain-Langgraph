@@ -21,6 +21,10 @@ export const runAgent = async () => {
       checkpointer,
     });
 
+    const drawableGraphStateImg = await agent.drawMermaidPng();
+
+    writeFileSync("./graph.png", new Uint8Array(drawableGraphStateImg.buffer));
+
     while (true) {
       const q = await rl.question("You: ");
 
@@ -50,13 +54,6 @@ export const runAgent = async () => {
       );
 
       const aiMsg = result.messages[result.messages.length - 1].content;
-
-      const drawableGraphStateImg = await agent.drawMermaidPng();
-
-      writeFileSync(
-        "./graph.png",
-        new Uint8Array(drawableGraphStateImg.buffer),
-      );
 
       console.log(`Assistant: ${aiMsg}`);
     }
