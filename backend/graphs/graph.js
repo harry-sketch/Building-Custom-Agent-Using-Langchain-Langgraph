@@ -1,71 +1,57 @@
+// Todo: => Step 1 => Start => llm => conditoinal-edge (Tools) => llm => end
+
 import { writeFileSync } from "node:fs";
-import { MessagesAnnotation, START, StateGraph } from "@langchain/langgraph";
+import { stdin as input, stdout as output } from "node:process";
+import { createInterface } from "node:readline/promises";
+import { llmApp } from "../compile/graph-compile.js";
+import { memoryConfig } from "../utils/config.js";
 
-// Info: Step 1 => Cut the Vegetables
-const cutVegetables = (state) => {
-  console.log("cut the vegetables");
-
-  return state;
-};
-
-// Info: Step 2 => Boil the rice
-const boilRice = (state) => {
-  console.log("boil the rice");
-  return state;
-};
-
-// Info: Step 3 => Add the Salt
-const addSalt = (state) => {
-  console.log("adding salt");
-  return state;
-};
-
-// Info: Step 4 => Taste the Briyani
-const tasteBriyani = (state) => {
-  console.log("tasting briyani");
-  return state;
-};
-
-const decisionMaking = () => {
-  const gg = true;
-  if (gg) {
-    return "__end__";
-  } else {
-    return "addTheSalt";
-  }
-};
-
-const graph = new StateGraph(MessagesAnnotation)
-  .addNode("cutTheVegetables", cutVegetables)
-  .addNode("boilTheRice", boilRice)
-  .addNode("addTheSalt", addSalt)
-  .addNode("tastingTheBriyani", tasteBriyani)
-  .addEdge(START, "cutTheVegetables")
-  .addEdge("cutTheVegetables", "boilTheRice")
-  .addEdge("boilTheRice", "addTheSalt")
-  .addEdge("addTheSalt", "tastingTheBriyani")
-  .addConditionalEdges("tastingTheBriyani", decisionMaking, {
-    __end__: "__end__",
-    addTheSalt: "addTheSalt",
-  });
-
-const app = graph.compile();
-
-const run = async () => {
-  // Building the Graph
-  const drawableGraphState = await app.getGraphAsync();
+export const runLLmModel = async () => {
+  const drawableGraphState = await llmApp.getGraphAsync();
 
   const drawableGraphStateImg = await drawableGraphState.drawMermaidPng();
 
   const graphStateArrayBuffer = await drawableGraphStateImg.arrayBuffer();
 
-  writeFileSync("./lang-graph.png", new Uint8Array(graphStateArrayBuffer));
+  writeFileSync("./re-act-llm.png", new Uint8Array(graphStateArrayBuffer));
 
-  const finalState = await app.invoke({
-    messages: [],
+  const rl = createInterface({
+    input,
+    output,
   });
 
-  console.log({ finalState });
-};
+  try {
+    while (true) {
+      const question = await rl.question("You: ");
 
-run();
+      if (question.trim().toLowerCase() === "bye") {
+        return "Good-Bye";
+      }
+
+      const aiMsg = await llmApp.invoke(
+        {
+          messages: [
+            {
+              role: "system",
+              content:
+                "You are a smart peronsal assistant name Siri who delivers answers very politely. Only use preferred tool according to the question when necessary.",
+            },
+            {
+              role: "human",
+              content: question,
+            },
+          ],
+        },
+        memoryConfig,
+      );
+
+      console.log(
+        `Assistant: ${aiMsg.messages[aiMsg.messages.length - 1].content}`,
+      );
+    }
+  } catch (error) {
+    console.log("Something went wrong", error);
+  } finally {
+    rl.close();
+  }
+};

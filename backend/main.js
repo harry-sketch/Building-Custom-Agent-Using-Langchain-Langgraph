@@ -1,8 +1,8 @@
 import "dotenv/config";
-import { runAgent } from "./agent/agent.js";
+import { runLLmModel } from "./graphs/graph.js";
 
 const main = async () => {
-  await runAgent();
+  await runLLmModel();
 };
 
 main();
